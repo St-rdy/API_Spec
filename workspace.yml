@@ -1,9 +1,11 @@
 opencollection: 1.0.0
 info:
-  name: "Stady-Api-Spec"
+  name: "Stardy_API_Docs"
   type: workspace
 
 collections:
+  - name: "User Service API"
+    path: "./collections/User Service API"
 
 specs:
 
