@@ -1,0 +1,156 @@
+info:
+  name: 내 정보 수정
+  type: http
+  seq: 6
+
+http:
+  method: PATCH
+  url: "{{base_url}}/api/v1/users/me"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "nickname": "새닉네임",
+        "profileImageUrl": "https://cdn.example.com/profiles/2.png",
+        "domainId": 1,
+        "subjectIds": [
+          1,
+          3
+        ],
+        "regionIds": [
+          10,
+          11
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 수정 성공
+    request:
+      url: "{{base_url}}/api/v1/users/me"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"nickname": "새닉네임", "profileImageUrl": "https://cdn.example.com/profiles/2.png", "domainId": 1, "subjectIds": [1, 3], "regionIds": [10, 11]}'
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 1,
+            "nickname": "새닉네임",
+            "profileImageUrl": "https://cdn.example.com/profiles/2.png",
+            "domainId": 1,
+            "subjectIds": [
+              1,
+              3
+            ],
+            "regionIds": [
+              10,
+              11
+            ],
+            "updatedAt": "2026-03-01T12:00:00"
+          }
+  - name: 400 - 닉네임 형식 오류
+    request:
+      url: "{{base_url}}/api/v1/users/me"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"nickname": "a"}'
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "INVALID_NICKNAME",
+            "message": "닉네임은 2자 이상 10자 이하, 한글/영문/숫자만 허용됩니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+  - name: 400 - 허용되지 않은 이미지 URL
+    request:
+      url: "{{base_url}}/api/v1/users/me"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"profileImageUrl": "https://malicious.com/hack.png"}'
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "INVALID_PROFILE_IMAGE",
+            "message": "허용되지 않은 프로필 이미지입니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+
+docs: |-
+  ## 내 정보 수정
+
+  ### 수정 가능한 필드
+  | 필드 | 타입 | 필수 | 처리 위치 | 설명 |
+  |---|---|---|---|---|
+  | nickname | String | ❌ | User DB | 2자 이상 10자 이하, 한글/영문/숫자 |
+  | profileImageUrl | String | ❌ | User DB | 이미지 목록 API에서 반환된 URL만 허용 |
+  | domainId | Long | ❌ | gRPC → 게시판 | 관심 도메인 ID |
+  | subjectIds | List<Long> | ❌ | gRPC → 게시판 | 관심 과목 ID 목록 |
+  | regionIds | List<Long> | ❌ | gRPC → 게시판 | 관심 지역 ID 목록 |
+
+  ### 주의사항
+  - 모든 필드 optional — 보낸 필드만 수정됨
+  - domainId/subjectIds/regionIds는 User Service가 gRPC로 게시판 서비스에 전달
+  - profileImageUrl은 반드시 GET /api/v1/users/profile-images 에서 받은 URL이어야 함
+
+  ### 닉네임 유효성 규칙
+  - 길이: 2자 이상 10자 이하
+  - 형식: 한글, 영문, 숫자만 허용
+  - 공백 불허
+  - 중복 불허 (사전에 닉네임 중복 체크 API 호출 권장)
+
+  ### 실패 응답
+  | Status | error | 상황 | 프론트 처리 |
+  |---|---|---|---|
+  | 400 | INVALID_NICKNAME | 닉네임 형식 오류 | 에러 메시지 표시 |
+  | 400 | INVALID_PROFILE_IMAGE | 허용되지 않은 이미지 URL | 에러 메시지 표시 |
+  | 401 | TOKEN_EXPIRED | AT 만료 | refresh 후 재시도 |

@@ -1,0 +1,60 @@
+info:
+  name: Google 로그인 시작
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{base_url}}/api/v1/oauth2/authorization/google"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 302 - Google 로그인 페이지로 Redirect
+    request:
+      url: "{{base_url}}/api/v1/oauth2/authorization/google"
+      method: GET
+    response:
+      status: 302
+      statusText: Found
+      headers:
+        - name: Location
+          value: https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=...&scope=email+profile&response_type=code
+      body:
+        type: text
+        data: ""
+
+docs: |-
+  ## Google 소셜 로그인 시작
+
+  ### ⚠️ 중요 — 반드시 페이지 이동으로 호출해야 합니다
+
+  Postman에서 직접 호출하면 구글 로그인 페이지로 redirect됩니다.  
+  **실제 구현 시 Axios/Fetch로 호출하면 CORS 에러가 발생합니다.**
+
+  ### 올바른 호출 방법
+  ```javascript
+  // ✅ 페이지 이동으로 호출
+  window.location.href = '{{base_url}}/api/v1/oauth2/authorization/google';
+
+  // ❌ 절대 이렇게 호출하지 마세요
+  axios.get('/api/v1/oauth2/authorization/google');
+  ```
+
+  ### 처리 흐름
+  1. 프론트 → 이 URL로 페이지 이동
+  2. Spring Security가 요청을 가로채서 Google 로그인 페이지로 **302 redirect**
+  3. 사용자가 Google 로그인 완료
+  4. 백엔드 콜백 처리 (자동)
+  5. 프론트 콜백 페이지로 redirect: `https://www.example.com/oauth2/callback?code={임시코드}`
+
+  ### 응답
+  | 상황 | 결과 |
+  |---|---|
+  | 정상 | Google 로그인 페이지로 302 redirect |
+  | 로그인 실패 | 프론트 `/login?error=OAUTH2_FAILED`로 redirect |

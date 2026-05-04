@@ -1,0 +1,21 @@
+info:
+  name: 1. 소셜 로그인 시작
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 소셜 로그인 시작
+
+    사용자가 소셜 로그인 버튼을 클릭했을 때 호출하는 API 그룹입니다.
+
+    ### ⚠️ 핵심 주의사항
+    이 API들은 **Axios/Fetch 호출이 아닌 페이지 이동(window.location.href)** 으로만 호출해야 합니다.  
+    Spring Security가 302 redirect 응답을 내려주는데, Axios로 호출하면 브라우저가 redirect를 따라가지 못하고 CORS 에러가 발생합니다.
+
+    ### 인증 필요 여부
+    ❌ 인증 불필요
+  type: text/markdown

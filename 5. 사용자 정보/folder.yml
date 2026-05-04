@@ -1,0 +1,22 @@
+info:
+  name: 5. 사용자 정보
+  type: folder
+  seq: 5
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 사용자 정보 API
+
+    내 정보 조회, 프로필 수정, 회원 탈퇴 API입니다.
+
+    ### 도메인 정보 처리 방식
+    - **조회 시**: User Service가 자체 DB + gRPC(게시판 서비스)에서 도메인 정보를 가져와 합쳐서 응답
+    - **수정 시**: nickname/profileImageUrl은 User DB 직접 수정, domainId/subjectIds/regionIds는 gRPC로 게시판 서비스에 전달
+    - 프론트는 이 과정을 몰라도 됨 — User Service가 창구 역할
+
+    ### 인증 필요 여부
+    ✅ 모든 API에 인증 필요 (Authorization: Bearer {AT})
+  type: text/markdown

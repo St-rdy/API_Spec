@@ -1,0 +1,125 @@
+info:
+  name: 로그아웃
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/auth/logout"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+      description: 현재 유효한 Access Token
+  body:
+    type: text
+    data: ""
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 200) {
+            pm.collectionVariables.set('access_token', '');
+            console.log('✅ 로그아웃 완료. Access Token이 초기화되었습니다.');
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 로그아웃 성공
+    request:
+      url: "{{base_url}}/api/v1/auth/logout"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Set-Cookie
+          value: refreshToken=; Path=/api/v1/auth; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+      body:
+        type: json
+        data: |-
+          {
+            "message": "로그아웃이 완료되었습니다."
+          }
+  - name: 401 - AT 없음 또는 형식 오류
+    request:
+      url: "{{base_url}}/api/v1/auth/logout"
+      method: POST
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "UNAUTHORIZED",
+            "message": "인증 정보가 없습니다. 다시 로그인해 주세요.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+
+docs: |-
+  ## 로그아웃
+
+  현재 세션을 종료합니다.
+
+  ### 백엔드 처리 내용
+  1. Redis에서 RT 즉시 삭제
+  2. AT를 블랙리스트에 등록 (AT 만료 전까지 재사용 방지)
+  3. RT Cookie 만료 처리 (`Max-Age=0`으로 즉시 삭제)
+
+  ### ⚠️ 프론트 처리 주의사항
+  - API 성공/실패 **여부와 관계없이** 프론트 상태는 반드시 초기화해야 합니다.
+  - `finally` 블록에서 Zustand AT를 초기화하세요.
+
+  ```javascript
+  const logout = async () => {
+    try {
+      await axios.post('/api/v1/auth/logout', {}, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        withCredentials: true
+      });
+    } finally {
+      // 성공/실패 상관없이 무조건 초기화
+      useAuthStore.getState().clearAccessToken();
+      navigate('/login');
+    }
+  };
+  ```
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "message": "로그아웃이 완료되었습니다."
+  }
+  ```
+
+  **RT Cookie 즉시 만료:**
+  ```
+  Set-Cookie: refreshToken=; Path=/api/v1/auth; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+  ```
+
+  ### 실패 응답
+  | Status | error | 상황 | 프론트 처리 |
+  |---|---|---|---|
+  | 401 | UNAUTHORIZED | AT 없음 또는 형식 오류 | 로그인 페이지 이동 |
+  | 401 | TOKEN_EXPIRED | AT 만료 | refresh 후 재시도 |
+  | 500 | SERVER_ERROR | 서버 내부 오류 | finally에서 강제 초기화 |
