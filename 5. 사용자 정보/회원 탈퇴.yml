@@ -1,0 +1,84 @@
+info:
+  name: 회원 탈퇴
+  type: http
+  seq: 7
+
+http:
+  method: DELETE
+  url: "{{base_url}}/api/v1/users/me"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 탈퇴 성공
+    request:
+      url: "{{base_url}}/api/v1/users/me"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Set-Cookie
+          value: refreshToken=; Path=/api/v1/auth; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+      body:
+        type: json
+        data: |-
+          {
+            "message": "회원 탈퇴가 완료되었습니다."
+          }
+  - name: 401 - AT 만료
+    request:
+      url: "{{base_url}}/api/v1/users/me"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "TOKEN_EXPIRED",
+            "message": "Access Token이 만료되었습니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+
+docs: |-
+  ## 회원 탈퇴
+
+  ### 처리 방식
+  물리적 삭제가 아닌 소프트 딜리트 (status → INACTIVE)
+
+  ### 백엔드 처리 내용
+  1. users.status → INACTIVE 로 변경
+  2. Redis RT 즉시 삭제
+  3. AT 블랙리스트 등록
+  4. RT Cookie 만료 처리 (Max-Age=0)
+
+  ### ⚠️ 프론트 처리 주의사항
+  성공/실패 여부와 관계없이 finally에서 무조건 Zustand AT 초기화 후 로그인 페이지로 이동
+
+  ### 실패 응답
+  | Status | error | 상황 | 프론트 처리 |
+  |---|---|---|---|
+  | 401 | TOKEN_EXPIRED | AT 만료 | refresh 후 재시도 |
+  | 401 | UNAUTHORIZED | AT 없음 | 로그인 페이지 이동 |
+  | 500 | SERVER_ERROR | 서버 내부 오류 | finally에서 강제 초기화 |

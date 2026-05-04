@@ -1,0 +1,22 @@
+info:
+  name: 2. 임시코드 → 토큰 교환
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 임시코드 → 토큰 교환
+
+    소셜 로그인 완료 후 프론트 콜백 페이지에서 호출하는 API입니다.
+
+    ### 인증 필요 여부
+
+    ❌ 인증 불필요 (RT Cookie 자동 전송)
+
+    ### withCredentials
+
+    ✅ 필수 (`withCredentials: true`)
+  type: text/markdown

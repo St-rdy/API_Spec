@@ -1,0 +1,20 @@
+info:
+  name: 3. AT 재발급 (RTR)
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## AT 재발급
+
+    AT 만료 시 호출하는 API입니다.
+
+    ### 인증 필요 여부
+    ❌ 인증 불필요 (RT Cookie 자동 전송)
+
+    ### withCredentials
+    ✅ 필수 (`withCredentials: true`)
+  type: text/markdown

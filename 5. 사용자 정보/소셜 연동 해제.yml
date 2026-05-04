@@ -1,0 +1,123 @@
+info:
+  name: 소셜 연동 해제
+  type: http
+  seq: 3
+
+http:
+  method: DELETE
+  url: "{{base_url}}/api/v1/users/me/providers/:provider"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  params:
+    - name: provider
+      value: kakao
+      type: path
+      description: 해제할 소셜 제공자 (google / kakao / naver)
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 연동 해제 성공
+    request:
+      url: "{{base_url}}/api/v1/users/me/providers/kakao"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "message": "kakao 연동이 해제되었습니다."
+          }
+  - name: 400 - 마지막 소셜 연동 해제 시도
+    request:
+      url: "{{base_url}}/api/v1/users/me/providers/google"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "LAST_PROVIDER",
+            "message": "최소 1개의 소셜 연동이 필요합니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+  - name: 404 - 연결되지 않은 provider
+    request:
+      url: "{{base_url}}/api/v1/users/me/providers/naver"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "PROVIDER_NOT_FOUND",
+            "message": "연결되지 않은 소셜 계정입니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+  - name: 401 - AT 만료
+    request:
+      url: "{{base_url}}/api/v1/users/me/providers/kakao"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "TOKEN_EXPIRED",
+            "message": "Access Token이 만료되었습니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+
+docs: |-
+  ## 소셜 연동 해제
+
+  ### Path Parameter
+  | 파라미터 | 값 | 설명 |
+  |---|---|---|
+  | provider | google / kakao / naver | 해제할 소셜 제공자 |
+
+  ### 실패 응답
+  | Status | error | 상황 | 프론트 처리 |
+  |---|---|---|---|
+  | 400 | LAST_PROVIDER | 마지막 소셜 연동 해제 시도 | 최소 1개 소셜 연동 필요 안내 |
+  | 400 | INVALID_PROVIDER | 지원하지 않는 provider | 에러 메시지 표시 |
+  | 404 | PROVIDER_NOT_FOUND | 연결되지 않은 provider | 에러 메시지 표시 |
+  | 401 | TOKEN_EXPIRED | AT 만료 | refresh 후 재시도 |

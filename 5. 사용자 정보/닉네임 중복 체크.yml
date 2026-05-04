@@ -1,0 +1,111 @@
+info:
+  name: 닉네임 중복 체크
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{base_url}}/api/v1/users/nickname/check?value=새닉네임"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  params:
+    - name: value
+      value: 새닉네임
+      type: query
+      description: 중복 체크할 닉네임
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 사용 가능
+    request:
+      url: "{{base_url}}/api/v1/users/nickname/check?value=새닉네임"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+      params:
+        - name: value
+          value: 새닉네임
+          type: query
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "available": true
+          }
+  - name: 200 - 중복
+    request:
+      url: "{{base_url}}/api/v1/users/nickname/check?value=중복닉네임"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+      params:
+        - name: value
+          value: 중복닉네임
+          type: query
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "available": false
+          }
+  - name: 400 - 닉네임 형식 오류
+    request:
+      url: "{{base_url}}/api/v1/users/nickname/check?value=a"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+      params:
+        - name: value
+          value: a
+          type: query
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "INVALID_NICKNAME",
+            "message": "닉네임은 2자 이상 10자 이하, 한글/영문/숫자만 허용됩니다.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+
+docs: |-
+  ## 닉네임 중복 체크
+
+  ### 요청 파라미터
+  | 파라미터 | 필수 | 설명 |
+  |---|---|---|
+  | value | ✅ | 중복 체크할 닉네임 |
+
+  ### 실패 응답
+  | Status | error | 상황 | 프론트 처리 |
+  |---|---|---|---|
+  | 400 | INVALID_NICKNAME | 닉네임 형식 오류 | 에러 메시지 표시 |
+  | 400 | MISSING_PARAMETER | value 파라미터 누락 | 에러 메시지 표시 |
+  | 401 | TOKEN_EXPIRED | AT 만료 | refresh 후 재시도 |

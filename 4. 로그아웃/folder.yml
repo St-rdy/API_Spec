@@ -1,0 +1,18 @@
+info:
+  name: 4. 로그아웃
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 로그아웃
+
+    ### 인증 필요 여부
+    ✅ 인증 필요 (`Authorization: Bearer {AT}`)
+
+    ### withCredentials
+    ✅ 필수 (`withCredentials: true`)
+  type: text/markdown

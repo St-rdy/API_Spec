@@ -1,0 +1,139 @@
+info:
+  name: Access Token 재발급
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/auth/token/refresh"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: ""
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 200) {
+            const json = res.getBody();
+            pm.collectionVariables.set('access_token', json.accessToken);
+            console.log('✅ Access Token이 갱신되었습니다.');
+        } else if (res.getStatus() === 401) {
+            console.log('⚠️ RT 만료 또는 무효. 재로그인이 필요합니다.');
+            pm.collectionVariables.set('access_token', '');
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 재발급 성공
+    request:
+      url: "{{base_url}}/api/v1/auth/token/refresh"
+      method: POST
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Set-Cookie
+          value: refreshToken=eyJhbGciOiJIUzI1NiJ9.NEW_RT_EXAMPLE; Path=/api/v1/auth; Max-Age=604800; HttpOnly; Secure; SameSite=Strict
+      body:
+        type: json
+        data: |-
+          {
+            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.NEW_AT_EXAMPLE.NEW_SIGNATURE",
+            "tokenType": "Bearer",
+            "expiresIn": 1800
+          }
+  - name: 401 - RT 만료
+    request:
+      url: "{{base_url}}/api/v1/auth/token/refresh"
+      method: POST
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "REFRESH_TOKEN_EXPIRED",
+            "message": "리프레시 토큰이 만료되었습니다. 다시 로그인해 주세요.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+  - name: 401 - RT 불일치 (탈취 의심)
+    request:
+      url: "{{base_url}}/api/v1/auth/token/refresh"
+      method: POST
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "INVALID_TOKEN",
+            "message": "유효하지 않은 토큰입니다. 다시 로그인해 주세요.",
+            "timestamp": "2026-03-01T12:00:00"
+          }
+
+docs: |-
+  ## Access Token 재발급 (RTR 방식)
+
+  AT가 만료되었을 때 RT를 사용하여 새 AT와 새 RT를 발급받습니다.
+
+  ### 호출 시점
+  인증이 필요한 API 호출 시 **401 TOKEN_EXPIRED** 응답을 받았을 때
+
+  ### RTR(Refresh Token Rotation) 이란?
+  - AT를 재발급할 때 RT도 **함께 교체**되는 방식
+  - 기존 RT는 즉시 폐기, 새 RT 발급
+  - 탈취된 RT로 재발급 시도 시 불일치 감지 → 강제 로그아웃
+
+  ### ⚠️ withCredentials 필수
+  RT Cookie 전송 및 새 RT Cookie 수신을 위해 반드시 `withCredentials: true` 설정이 필요합니다.
+
+  ### ⚠️ 동시 요청 처리
+  AT 만료 상태에서 여러 API를 동시에 호출하면 재발급 요청이 중복될 수 있습니다.  
+  **Axios Interceptor에서 `isRefreshing` 플래그로 중복 요청을 방지해야 합니다.**  
+  (상세 구현 방법은 프론트엔드 개발팀에 별도 공유 예정)
+
+  ### 요청
+  - Body: 없음
+  - Cookie: `refreshToken` (HttpOnly, 브라우저 자동 전송)
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "tokenType": "Bearer",
+    "expiresIn": 1800
+  }
+  ```
+
+  **새 RT는 Set-Cookie 헤더로 자동 갱신됩니다.**
+  ```
+  Set-Cookie: refreshToken={새RT값}; HttpOnly; Secure; Path=/api/v1/auth; SameSite=Strict
+  ```
+
+  ### 실패 응답
+  | Status | error | 상황 | 프론트 처리 |
+  |---|---|---|---|
+  | 401 | REFRESH_TOKEN_NOT_FOUND | RT Cookie 없음 | 로그인 페이지 이동 |
+  | 401 | REFRESH_TOKEN_EXPIRED | RT 만료 (7일 경과) | 로그인 페이지 이동 |
+  | 401 | INVALID_TOKEN | RT 변조 또는 불일치 (탈취 의심) | 강제 로그아웃 후 로그인 이동 |
+  | 500 | SERVER_ERROR | 서버 내부 오류 | 재시도 안내 |

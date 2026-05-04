@@ -1,0 +1,29 @@
+info:
+  name: 6. 다른 유저 프로필
+  type: folder
+  seq: 6
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 다른 유저 프로필 조회
+
+    ### 공개 정보 범위
+    | 필드 | 공개 여부 | 설명 |
+    |---|---|---|
+    | id | ✅ | 유저 ID |
+    | nickname | ✅ | 닉네임 |
+    | profileImageUrl | ✅ | 프로필 이미지 |
+    | lastLoginAt | ✅ | 마지막 로그인 시각 |
+    | email | ❌ | 비공개 |
+    | name | ❌ | 비공개 |
+    | status | ❌ | 비공개 |
+
+    ### 탈퇴 유저 처리
+    탈퇴한 유저(INACTIVE)도 USER_NOT_FOUND로 반환 — 탈퇴 여부 외부 노출 방지
+
+    ### 인증 필요 여부
+    ✅ 인증 필요
+  type: text/markdown
