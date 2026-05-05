@@ -175,6 +175,7 @@ docs:
     | 400 | INVALID_TEMP_CODE | 임시코드 만료 또는 재사용 시도 | 재로그인 유도 |
     | 400 | MISSING_PARAMETER | 필수 파라미터 누락 | 에러 메시지 표시 |
     | 400 | INVALID_PROVIDER | 지원하지 않는 provider | 에러 메시지 표시 |
+    | 400 | DUPLICATED_PROVIDER | 이미 연결된 소셜 계정 | 에러 메시지 표시 |
     | 400 | INVALID_NICKNAME | 닉네임 형식 오류 | 에러 메시지 표시 |
     | 400 | INVALID_PROFILE_IMAGE | 허용되지 않은 이미지 URL | 에러 메시지 표시 |
     | 400 | LAST_PROVIDER | 마지막 소셜 연동 해제 시도 | 최소 1개 소셜 연동 필요 안내 |
