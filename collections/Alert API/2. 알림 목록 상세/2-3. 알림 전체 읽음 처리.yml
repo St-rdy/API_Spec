@@ -1,0 +1,94 @@
+info:
+  name: 2-3. 알림 전체 읽음 처리
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{base_url}}/api/v1/notifications/read-all"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+      description: Access Token
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 - 전체 읽음 처리 성공
+    request:
+      url: "{{base_url}}/api/v1/notifications/read-all"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "status": 200,
+            "code": "SUCCESS",
+            "message": "모든 알림을 읽음 처리했습니다.",
+            "data": {
+              "updated_count": 3
+            }
+          }
+  - name: 401 - 인증 실패
+    request:
+      url: "{{base_url}}/api/v1/notifications/read-all"
+      method: PATCH
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "status": 401,
+            "code": "UNAUTHORIZED",
+            "message": "인증이 필요합니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 2-3. 알림 전체 읽음 처리
+
+  사용자의 모든 읽지 않은 알림을 읽음 상태로 변경합니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "status": 200,
+    "code": "SUCCESS",
+    "message": "모든 알림을 읽음 처리했습니다.",
+    "data": {
+      "updated_count": 3
+    }
+  }
+  ```
+
+  `updated_count`: 읽음 처리된 알림 수 (미읽음 알림이 없으면 0)
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 유효하지 않거나 만료된 토큰 |
+  | 500 | DB_ERROR | 데이터베이스 조회 중 오류가 발생했습니다. | 서버 내부 DB 오류 |

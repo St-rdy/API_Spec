@@ -1,0 +1,24 @@
+info:
+  name: 1. 알림 설정
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 알림 설정 API
+
+    사용자의 알림 설정을 조회하고 변경하는 API입니다.
+
+    ### 설정 가능한 항목
+    | 필드 | 타입 | 설명 |
+    |---|---|---|
+    | push_enabled | boolean | Push 알림 수신 여부 |
+    | chat_enabled | boolean | 채팅 알림 수신 여부 |
+    | study_enabled | boolean | 스터디 알림 수신 여부 |
+
+    ### 인증 필요 여부
+    ✅ 모든 API에 인증 필요 (Authorization: Bearer {AT})
+  type: text/markdown

@@ -1,0 +1,25 @@
+info:
+  name: 4. 웹 푸시 구독 관리
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 웹 푸시 구독 관리 API
+
+    브라우저의 Web Push 구독을 등록하고 해제하는 API입니다.
+    서버는 Web-Push 라이브러리를 이용해 발송합니다.
+
+    ### Web Push 흐름
+    1. `GET /vapid-public-key` 로 공개키 조회
+    2. 브라우저 `PushManager.subscribe()` 호출 (공개키 사용)
+    3. 구독 정보(endpoint, keys)를 `POST /subscribe` 로 서버에 등록
+    4. 이후 서버가 Web-Push 라이브러리로 푸시 발송
+
+    ### 인증 필요 여부
+    ✅ subscribe / unsubscribe는 인증 필요
+    ❌ vapid-public-key 조회는 인증 불필요
+  type: text/markdown

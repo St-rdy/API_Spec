@@ -1,0 +1,24 @@
+info:
+  name: 3. 알림 생성
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 알림 생성 API
+
+    알림을 생성하는 API입니다.
+
+    ### 호출 주체
+    | API | 호출 주체 |
+    |---|---|
+    | 사용자 알림 생성 | 일반 유저 (채팅, 스터디 등 이벤트 발생 시) |
+    | 시스템 알림 생성 | 관리자 전용 (공지, 안내, 점검 등) |
+
+    ### 인증 필요 여부
+    ✅ 모든 API에 인증 필요 (Authorization: Bearer {AT})
+    ⚠️ 시스템 알림 생성은 관리자 권한 필요
+  type: text/markdown

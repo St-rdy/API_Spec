@@ -6,6 +6,8 @@ info:
 collections:
   - name: "User Service API"
     path: "./collections/User Service API"
+  - name: "Alert API"
+    path: "./collections/Alert API"
 
 specs:
 
