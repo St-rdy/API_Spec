@@ -1,0 +1,135 @@
+info:
+  name: 게시글 상세 조회
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{base_url}}/api/v1/post/:postId"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: postId
+      value: "1"
+      type: path
+      description: 조회할 게시글 ID
+    - name: page
+      value: "0"
+      type: query
+      description: 댓글 페이지 번호 (기본 0)
+    - name: size
+      value: "20"
+      type: query
+      description: 댓글 페이지 크기 (기본 20)
+  auth: inherit
+
+examples:
+  - name: 200 - 조회 성공
+    request:
+      url: "{{base_url}}/api/v1/post/1"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "게시글 상세 조회 성공",
+            "data": {
+              "id": 1,
+              "category": {
+                "regions": [{ "value": "Seoul", "label": "서울" }],
+                "subjects": [{ "value": "Mathematics", "label": "수학" }]
+              },
+              "title": "게시글 제목입니다",
+              "content": "게시글 내용입니다",
+              "userId": 1,
+              "likeCount": 10,
+              "viewCount": 100,
+              "commentCount": 5,
+              "createdAt": "2026-05-05T12:00:00",
+              "updatedAt": "2026-05-05T12:00:00",
+              "thumbnail": "...",
+              "imageUrls": ["..."],
+              "comments": {
+                "content": [
+                  {
+                    "id": 1,
+                    "userId": 2,
+                    "nickname": "댓글러",
+                    "profileUrl": "...",
+                    "content": "댓글 내용",
+                    "status": "ACTIVE",
+                    "createdAt": "...",
+                    "replies": []
+                  }
+                ],
+                "totalPages": 1,
+                "totalElements": 1
+              }
+            }
+          }
+  - name: 404 - 게시글 없음
+    request:
+      url: "{{base_url}}/api/v1/post/999"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "NOT_FOUND",
+            "message": "게시글을 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 게시글 상세 조회
+
+  특정 게시글의 상세 정보와 해당 게시글에 달린 댓글 목록을 페이징하여 조회합니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ❌ | `Bearer {accessToken}` (좋아요/스크랩 여부 확인 시 필요) |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | postId | number | ✅ | 조회할 게시글 ID |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "게시글 상세 조회 성공",
+    "data": {
+      "id": 1,
+      "title": "...",
+      "content": "...",
+      "comments": { ... }
+    }
+  }
+  ```
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 404 | NOT_FOUND | 게시글을 찾을 수 없습니다. | 존재하지 않는 postId |

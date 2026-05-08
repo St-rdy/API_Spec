@@ -1,0 +1,137 @@
+info:
+  name: 메시지 전송
+  type: websocket
+  seq: 2
+
+websocket:
+  url: "{{ws_url}}/ws/chat"
+
+docs: |-
+  ## 메시지 전송 (STOMP SEND)
+
+  WebSocket(STOMP) 연결 후 채팅방에 메시지를 전송합니다.
+  텍스트 메시지와 파일 메시지 두 가지 타입을 지원합니다.
+
+  > WebSocket 연결 및 STOMP 인증 방법은 `WebSocket 연결 (STOMP)` 문서를 참고하세요.
+
+  ---
+
+  ### STOMP 발행 (Publish)
+
+  #### 발행 대상 (destination)
+  ```
+  /app/rooms/{roomId}/message
+  ```
+
+  ---
+
+  ### 텍스트 메시지 전송
+
+  **STOMP SEND 프레임:**
+  ```
+  SEND
+  destination:/app/rooms/1/message
+  content-type:application/json
+
+  {"type": "TEXT", "content": "안녕하세요!", "fileId": null}
+  ```
+
+  **발행 바디:**
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | type | string | ✅ | 메시지 타입: `TEXT` |
+  | content | string | ✅ | 전송할 메시지 내용 |
+  | fileId | null | - | 텍스트 메시지 시 항상 `null` |
+
+  **서버 브로드캐스트 응답** (`/topic/rooms/{roomId}` 구독 시 수신):
+  ```json
+  {
+    "id": 101,
+    "roomId": 1,
+    "userId": 1,
+    "nickname": "사용자닉네임",
+    "profileUrl": "https://s3.amazonaws.com/stardy/profile1.jpg",
+    "type": "TEXT",
+    "content": "안녕하세요!",
+    "status": "ACTIVE",
+    "fileId": null,
+    "fileName": null,
+    "fileUrl": null,
+    "updatedAt": null,
+    "createdAt": "2026-05-07T14:30:00Z"
+  }
+  ```
+
+  ---
+
+  ### 파일 메시지 전송
+
+  > **주의:** 파일 메시지 전송 전, 반드시 `파일 업로드 API`로 파일을 먼저 업로드하고 반환된 `fileId`를 사용해야 합니다.
+
+  **파일 전송 순서:**
+  1. `POST /api/v1/chat/rooms/{roomId}/files` 로 파일 업로드
+  2. 응답의 `fileId`를 확인
+  3. STOMP SEND 프레임으로 파일 메시지 발행
+
+  **STOMP SEND 프레임:**
+  ```
+  SEND
+  destination:/app/rooms/1/message
+  content-type:application/json
+
+  {"type": "FILE", "content": null, "fileId": 5}
+  ```
+
+  **발행 바디:**
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | type | string | ✅ | 메시지 타입: `FILE` |
+  | content | null | - | 파일 메시지 시 항상 `null` |
+  | fileId | number | ✅ | 업로드된 파일 ID |
+
+  **서버 브로드캐스트 응답** (`/topic/rooms/{roomId}` 구독 시 수신):
+  ```json
+  {
+    "id": 102,
+    "roomId": 1,
+    "userId": 1,
+    "nickname": "사용자닉네임",
+    "profileUrl": "https://s3.amazonaws.com/stardy/profile1.jpg",
+    "type": "FILE",
+    "content": null,
+    "status": "ACTIVE",
+    "fileId": 5,
+    "fileName": "스터디자료.pdf",
+    "fileUrl": "https://s3.amazonaws.com/stardy/files/study.pdf",
+    "updatedAt": null,
+    "createdAt": "2026-05-07T14:32:00Z"
+  }
+  ```
+
+  ---
+
+  ### 메시지 타입 (type)
+  | 값 | 설명 |
+  |---|---|
+  | TEXT | 일반 텍스트 메시지 |
+  | FILE | 파일 첨부 메시지 |
+  | SYSTEM | 시스템 메시지 (서버에서 자동 발행, 클라이언트 발행 불가) |
+
+  ### 메시지 상태 (status)
+  | 값 | 설명 |
+  |---|---|
+  | ACTIVE | 정상 메시지 |
+  | EDITED | 수정된 메시지 (프론트엔드에서 "(수정됨)" 표시, `updatedAt` 값 있음) |
+  | DELETED | 삭제된 메시지 (`content`는 "삭제된 메시지입니다."로 반환) |
+
+  ---
+
+  ### STOMP 에러 응답
+
+  발행 실패 시 STOMP ERROR 프레임이 반환됩니다.
+
+  | 원인 | message |
+  |---|---|
+  | 채팅방 비멤버 | `NOT_ROOM_MEMBER` |
+  | 유효하지 않은 fileId | `FILE_NOT_FOUND` |
+  | 빈 content (TEXT 타입) | `CONTENT_REQUIRED` |

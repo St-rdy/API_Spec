@@ -1,0 +1,18 @@
+info:
+  name: 2. 댓글 (Comment)
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 댓글 관련 API
+
+    게시글의 댓글 목록 조회 및 작성, 수정, 삭제 기능을 제공합니다.
+
+    ### 인증 필요 여부
+    - **목록 조회 API**: ❌ 인증 불필요
+    - **작성/수정/삭제 API**: ✅ 인증 필수
+  type: text/markdown

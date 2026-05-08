@@ -1,0 +1,64 @@
+info:
+  name: 댓글 목록 조회
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{base_url}}/api/v1/post/:postId/comments"
+  params:
+    - name: postId
+      value: "1"
+      type: path
+  auth: inherit
+
+examples:
+  - name: 200 - 조회 성공
+    request:
+      url: "{{base_url}}/api/v1/post/1/comments"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "댓글 조회 성공",
+            "data": {
+              "content": [
+                {
+                  "id": 1,
+                  "userId": 2,
+                  "nickname": "댓글러",
+                  "profileUrl": "...",
+                  "content": "댓글 내용",
+                  "status": "ACTIVE",
+                  "createdAt": "...",
+                  "replies": []
+                }
+              ],
+              "totalPages": 1,
+              "totalElements": 1
+            }
+          }
+
+docs: |-
+  ## 댓글 목록 조회
+
+  특정 게시글에 달린 댓글 목록을 조회합니다.
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "댓글 조회 성공",
+    "data": {
+      "content": [...],
+      "totalPages": 1
+    }
+  }
+  ```

@@ -1,0 +1,18 @@
+info:
+  name: 5. 읽음 처리 (Read Receipt)
+  type: folder
+  seq: 5
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 읽음 처리 API
+
+    채팅방의 읽지 않은 메시지 수(unreadCount)를 초기화하는 기능을 제공합니다.
+    사용자가 채팅방을 열거나 스크롤을 최하단으로 이동했을 때 호출하여 읽음 상태를 동기화합니다.
+
+    ### 인증 필요 여부
+    - **모든 API**: ✅ 인증 필수
+  type: text/markdown

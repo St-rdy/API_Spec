@@ -1,0 +1,19 @@
+info:
+  name: 4. 파일 (File)
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 파일 관련 API
+
+    채팅 내 파일 업로드 및 다운로드 기능을 제공합니다.
+    파일은 최대 100MB까지 업로드 가능하며, MVP 단계에서 저장 기간은 무제한입니다.
+
+    ### 인증 필요 여부
+    - **업로드 API**: ✅ 인증 필수
+    - **다운로드 API**: ✅ 인증 필수
+  type: text/markdown

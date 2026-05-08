@@ -1,0 +1,156 @@
+info:
+  name: 채팅방 퇴장
+  type: http
+  seq: 2
+
+http:
+  method: DELETE
+  url: "{{base_url}}/api/v1/chat/rooms/:roomId/leave"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: roomId
+      value: "1"
+      type: path
+      description: 퇴장할 채팅방 ID
+  auth: inherit
+
+examples:
+  - name: 200 - 퇴장 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1/leave"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "채팅방에서 퇴장하셨습니다.",
+            "data": null
+          }
+  - name: 403 - 채팅방 비멤버
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1/leave"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "NOT_ROOM_MEMBER",
+            "message": "채팅방 멤버가 아닙니다.",
+            "data": null
+          }
+  - name: 404 - 채팅방 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/999/leave"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "ROOM_NOT_FOUND",
+            "message": "채팅방을 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 채팅방 퇴장
+
+  채팅방에서 퇴장하여 멤버에서 제거됩니다.
+  퇴장 완료 후 서버는 해당 채팅방에 `"OOO 님이 퇴장하셨습니다."` 시스템 메시지를 자동 발행합니다.
+
+  > **Board Service 연동**: 스터디 그룹에서 멤버가 탈퇴하거나 강퇴될 때 Board Service가 자동으로 이 API를 호출합니다.
+  > 사용자가 직접 호출할 필요 없이 그룹 탈퇴/강퇴 시 채팅방 퇴장이 자동으로 처리됩니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | roomId | number | ✅ | 퇴장할 채팅방 ID |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방에서 퇴장하셨습니다.",
+    "data": null
+  }
+  ```
+
+  > 퇴장 후 서버는 `/topic/rooms/{roomId}` 토픽으로 SYSTEM 메시지를 브로드캐스트합니다.
+  > ```json
+  > { "type": "SYSTEM", "content": "홍길동 님이 퇴장하셨습니다." }
+  > ```
+
+  ---
+
+  ### 방장(OWNER) 퇴장 정책
+
+  방장이 퇴장할 때는 일반 멤버와 다른 처리가 적용됩니다.
+
+  #### 케이스 1: 방장 외 다른 멤버가 있는 경우
+  - 가장 먼저 입장한 멤버(`joined_at` 기준)에게 방장 권한이 자동 이전됩니다.
+  - 응답의 `data.newOwnerUserId` 필드에 새 방장의 userId가 반환됩니다.
+  - 채팅방에 `"OOO 님이 새 방장이 되었습니다."` 시스템 메시지가 자동 발행됩니다.
+
+  **방장 퇴장 성공 응답 (멤버 있을 때):**
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방에서 퇴장하셨습니다.",
+    "data": {
+      "newOwnerUserId": 2
+    }
+  }
+  ```
+
+  #### 케이스 2: 방장이 마지막 멤버인 경우
+  - 채팅방이 자동으로 삭제됩니다.
+  - `data`는 `null`로 반환됩니다.
+
+  **방장 퇴장 성공 응답 (마지막 멤버일 때):**
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방에서 퇴장하셨습니다.",
+    "data": null
+  }
+  ```
+
+  ---
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 403 | NOT_ROOM_MEMBER | 채팅방 멤버가 아닙니다. | 비멤버 퇴장 시도 |
+  | 404 | ROOM_NOT_FOUND | 채팅방을 찾을 수 없습니다. | 존재하지 않는 roomId |

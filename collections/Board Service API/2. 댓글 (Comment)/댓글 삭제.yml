@@ -1,0 +1,42 @@
+info:
+  name: 댓글 삭제
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{base_url}}/api/v1/comment/:commentId"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: commentId
+      value: "1"
+      type: path
+  auth: inherit
+
+examples:
+  - name: 200 - 삭제 성공
+    request:
+      url: "{{base_url}}/api/v1/comment/1"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "댓글이 삭제되었습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 댓글 삭제
+
+  본인이 작성한 댓글을 삭제합니다. (Soft Delete)

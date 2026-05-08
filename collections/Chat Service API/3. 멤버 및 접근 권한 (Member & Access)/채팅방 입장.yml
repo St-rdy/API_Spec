@@ -1,0 +1,134 @@
+info:
+  name: 채팅방 입장
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/chat/rooms/:roomId/join"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: roomId
+      value: "1"
+      type: path
+      description: 입장할 채팅방 ID
+  auth: inherit
+
+examples:
+  - name: 200 - 입장 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1/join"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "채팅방에 입장하셨습니다.",
+            "data": {
+              "roomId": 1,
+              "userId": 3,
+              "role": "MEMBER",
+              "joinedAt": "2026-05-07T15:00:00"
+            }
+          }
+  - name: 400 - 이미 입장한 멤버
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1/join"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: json
+        data: |-
+          {
+            "code": 400,
+            "status": "ALREADY_JOINED",
+            "message": "이미 입장한 채팅방입니다.",
+            "data": null
+          }
+  - name: 404 - 채팅방 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/999/join"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "ROOM_NOT_FOUND",
+            "message": "채팅방을 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 채팅방 입장
+
+  채팅방에 입장하여 멤버로 등록됩니다.
+  입장 시 `joined_at`이 기록되며, `historyVisible` 정책에 따라 이전 대화 접근 범위가 결정됩니다.
+  입장 완료 후 서버는 해당 채팅방에 `"OOO 님이 입장하셨습니다."` 시스템 메시지를 자동 발행합니다.
+
+  > **Board Service 연동**: 스터디 그룹에 멤버가 가입하면 Board Service가 자동으로 이 API를 호출합니다.
+  > 사용자가 직접 호출할 필요 없이 그룹 가입 시 채팅방 입장이 자동으로 처리됩니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | roomId | number | ✅ | 입장할 채팅방 ID |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방에 입장하셨습니다.",
+    "data": {
+      "roomId": 1,
+      "userId": 3,
+      "role": "MEMBER",
+      "joinedAt": "2026-05-07T15:00:00"
+    }
+  }
+  ```
+
+  > 입장 후 서버는 `/topic/rooms/{roomId}` 토픽으로 SYSTEM 메시지를 브로드캐스트합니다.
+  > ```json
+  > { "type": "SYSTEM", "content": "홍길동 님이 입장하셨습니다." }
+  > ```
+
+  ### 이전 대화 노출 정책 (History Visibility)
+  | historyVisible | 신규 멤버 입장 시 동작 |
+  |---|---|
+  | true | 입장 이전의 모든 과거 대화 조회 허용 |
+  | false | 본인의 `joined_at` 이후 메시지만 조회 가능 |
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 400 | ALREADY_JOINED | 이미 입장한 채팅방입니다. | 중복 입장 시도 |
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 404 | ROOM_NOT_FOUND | 채팅방을 찾을 수 없습니다. | 존재하지 않는 roomId |

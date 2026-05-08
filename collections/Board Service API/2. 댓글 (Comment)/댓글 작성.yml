@@ -1,0 +1,83 @@
+info:
+  name: 댓글 작성
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/post/:postId/comment"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: postId
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "content": "댓글 내용",
+        "parentId": null
+      }
+  auth: inherit
+
+examples:
+  - name: 200 - 작성 성공
+    request:
+      url: "{{base_url}}/api/v1/post/1/comment"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": "댓글 내용"}'
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "댓글 작성 성공",
+            "data": {
+              "id": 5,
+              "userId": 42,
+              "nickname": "사용자명",
+              "profileUrl": "https://s3.amazonaws.com/stardy/profile.jpg",
+              "content": "댓글 내용",
+              "status": "ACTIVE",
+              "createdAt": "2026-05-07T12:00:00",
+              "replies": []
+            }
+          }
+
+docs: |-
+  ## 댓글 작성
+
+  게시글에 댓글 또는 대댓글을 작성합니다.
+
+  ### 요청 바디
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | content | string | ✅ | 댓글 내용 |
+  | parentId | number \| null | ❌ | 대댓글인 경우 부모 댓글 ID, 일반 댓글은 null |
+
+  ### 성공 응답 필드 (CommentResponse)
+  | 필드 | 타입 | 설명 |
+  |---|---|---|
+  | id | number | 댓글 ID |
+  | userId | number | 작성자 ID |
+  | nickname | string | 작성자 닉네임 |
+  | profileUrl | string | 작성자 프로필 이미지 URL |
+  | content | string | 댓글 내용 |
+  | status | string | 댓글 상태 (`ACTIVE` / `DELETED`) |
+  | createdAt | string | 작성 일시 |
+  | replies | array | 대댓글 목록 (CommentResponse 동일 구조) |

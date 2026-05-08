@@ -1,0 +1,147 @@
+info:
+  name: 메시지 삭제
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{base_url}}/api/v1/chat/messages/:messageId"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: messageId
+      value: "1"
+      type: path
+      description: 삭제할 메시지 ID
+  auth: inherit
+
+examples:
+  - name: 200 - 삭제 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "메시지가 삭제되었습니다.",
+            "data": null
+          }
+  - name: 403 - 채팅방 비멤버
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "NOT_ROOM_MEMBER",
+            "message": "채팅방 멤버가 아닙니다.",
+            "data": null
+          }
+  - name: 403 - 타인 메시지
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "MESSAGE_ACCESS_DENIED",
+            "message": "본인의 메시지만 수정/삭제할 수 있습니다.",
+            "data": null
+          }
+  - name: 404 - 메시지 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/999"
+      method: DELETE
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "MESSAGE_NOT_FOUND",
+            "message": "메시지를 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 메시지 삭제
+
+  본인이 보낸 메시지를 논리적으로 삭제합니다 (Soft Delete).
+  DB에서 실제로 제거하지 않고 `status`를 `DELETED`로 변경하며, 이후 해당 메시지의 `content`는 "삭제된 메시지입니다."로 반환됩니다.
+  삭제 완료 후 서버는 해당 채팅방을 구독 중인 모든 클라이언트에게 삭제 이벤트를 브로드캐스트합니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | messageId | number | ✅ | 삭제할 메시지 ID |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "메시지가 삭제되었습니다.",
+    "data": null
+  }
+  ```
+
+  > 삭제 후 서버는 `/topic/rooms/{roomId}/delete` 토픽으로 아래 이벤트를 브로드캐스트합니다.
+  > 클라이언트는 해당 `id`의 메시지를 "삭제된 메시지입니다."로 교체해야 합니다.
+  > ```json
+  > {
+  >   "id": 101,
+  >   "status": "DELETED",
+  >   "content": "삭제된 메시지입니다."
+  > }
+  > ```
+
+  ### 논리 삭제(Soft Delete) 처리 방식
+  | 항목 | 내용 |
+  |---|---|
+  | DB 처리 | `status = 'DELETED'` 로 업데이트 (레코드 보존) |
+  | 과거 대화 조회 시 | `content`를 "삭제된 메시지입니다."로 반환, `status`는 `DELETED`로 반환 |
+  | 실시간 구독자 | `/topic/rooms/{roomId}/delete` 이벤트로 즉시 동기화 |
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 403 | NOT_ROOM_MEMBER | 채팅방 멤버가 아닙니다. | 해당 채팅방 비멤버의 접근 시도 |
+  | 403 | MESSAGE_ACCESS_DENIED | 본인의 메시지만 수정/삭제할 수 있습니다. | 타인 메시지 삭제 시도 |
+  | 404 | MESSAGE_NOT_FOUND | 메시지를 찾을 수 없습니다. | 존재하지 않는 messageId |

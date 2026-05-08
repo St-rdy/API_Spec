@@ -1,0 +1,80 @@
+info:
+  name: 이미지 업로드
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/image"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: multipart/form-data
+  body:
+    type: multipartForm
+    data:
+      - name: files
+        type: file
+  auth: inherit
+
+examples:
+  - name: 200 - 업로드 성공
+    request:
+      url: "{{base_url}}/api/v1/image"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "이미지 업로드 성공",
+            "data": {
+              "id": 1,
+              "imageUrl": "https://s3.amazonaws.com/stardy/image1.jpg"
+            }
+          }
+
+docs: |-
+  ## 이미지 업로드
+
+  이미지를 서버에 업로드하고 이미지 ID와 URL을 발급받습니다.
+
+  ### 선 업로드 방식
+
+  게시글 작성 중 이미지를 첨부하는 순간 이 API를 즉시 호출합니다.
+  응답으로 반환되는 `data.id`를 수집해두고, 게시글 최종 제출 시 `imageIds` 배열에 포함해야 합니다.
+
+  ### 요청
+
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | files | File (multipart) | ✅ | 업로드할 이미지 파일 |
+
+  ### 성공 응답 (200 OK)
+
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "이미지 업로드 성공",
+    "data": {
+      "id": 1,
+      "imageUrl": "https://s3.amazonaws.com/stardy/image1.jpg"
+    }
+  }
+  ```
+
+  | 필드 | 타입 | 설명 |
+  |---|---|---|
+  | id | number | 업로드된 이미지 ID |
+  | imageUrl | string | 이미지 접근 URL |
+
+  > `data.id`를 게시글 생성/수정 요청의 `imageIds`에 포함하세요.

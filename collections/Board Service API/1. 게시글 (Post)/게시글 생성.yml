@@ -1,0 +1,173 @@
+info:
+  name: 게시글 생성
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/post"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "category": {
+          "regions": [{ "value": "Seoul", "label": "서울" }],
+          "subjects": [{ "value": "Mathematics", "label": "수학" }]
+        },
+        "title": "게시글 제목",
+        "content": "게시글 내용",
+        "imageIds": []
+      }
+  auth: inherit
+
+examples:
+  - name: 200 - 작성 성공
+    request:
+      url: "{{base_url}}/api/v1/post"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "category": {
+              "regions": [{ "value": "Seoul", "label": "서울" }],
+              "subjects": [{ "value": "Mathematics", "label": "수학" }]
+            },
+            "title": "제목",
+            "content": "내용",
+            "imageIds": [1, 2]
+          }
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "게시글 작성 성공",
+            "data": {
+              "id": 10,
+              "category": {
+                "regions": [{ "value": "Seoul", "label": "서울" }],
+                "subjects": [{ "value": "Mathematics", "label": "수학" }]
+              },
+              "title": "제목",
+              "content": "내용",
+              "userId": 42,
+              "likeCount": 0,
+              "viewCount": 0,
+              "commentCount": 0,
+              "createdAt": "2026-05-07T12:00:00",
+              "updatedAt": "2026-05-07T12:00:00",
+              "thumbnail": "https://s3.amazonaws.com/stardy/image1.jpg"
+            }
+          }
+  - name: 400 - 제목 누락
+    request:
+      url: "{{base_url}}/api/v1/post"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"title": ""}'
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: json
+        data: |-
+          {
+            "code": 400,
+            "status": "TITLE_REQUIRED",
+            "message": "제목을 입력해주세요.",
+            "data": null
+          }
+
+docs: |-
+  ## 게시글 생성
+
+  새로운 게시글을 작성합니다.
+
+  ### 이미지 첨부 흐름
+
+  이미지가 포함된 게시글을 작성할 경우, **반드시 이미지 업로드 API를 먼저 호출**해야 합니다.
+
+  1. `POST /api/v1/image` 호출 → `data.id` 수령
+  2. 위에서 받은 id들을 `imageIds` 배열에 담아 게시글 생성 요청
+
+  이미지가 없는 게시글은 `imageIds`를 빈 배열(`[]`)로 전송합니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### 요청 바디
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | category | object | ✅ | 카테고리 정보 (아래 구조 참고) |
+  | category.regions | array | ✅ | 지역 목록 |
+  | category.regions[].value | string | ✅ | 지역 식별값 (백엔드 전달용, 예: `"Seoul"`) |
+  | category.regions[].label | string | ✅ | 지역 표시명 (프론트 표시용, 예: `"서울"`) |
+  | category.subjects | array | ✅ | 과목 목록 |
+  | category.subjects[].value | string | ✅ | 과목 식별값 (백엔드 전달용, 예: `"Mathematics"`) |
+  | category.subjects[].label | string | ✅ | 과목 표시명 (프론트 표시용, 예: `"수학"`) |
+  | title | string | ✅ | 게시글 제목 |
+  | content | string | ✅ | 게시글 내용 |
+  | imageIds | number[] | ✅ | 이미지 업로드 API에서 발급받은 ID 목록 (없으면 빈 배열) |
+
+  ### 성공 응답 (200 OK)
+
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "게시글 작성 성공",
+    "data": {
+      "id": 10,
+      "category": {
+        "regions": [{ "value": "Seoul", "label": "서울" }],
+        "subjects": [{ "value": "Mathematics", "label": "수학" }]
+      },
+      "title": "제목",
+      "content": "내용",
+      "userId": 42,
+      "likeCount": 0,
+      "viewCount": 0,
+      "commentCount": 0,
+      "createdAt": "2026-05-07T12:00:00",
+      "updatedAt": "2026-05-07T12:00:00",
+      "thumbnail": "https://s3.amazonaws.com/stardy/image1.jpg"
+    }
+  }
+  ```
+
+  | 필드 | 타입 | 설명 |
+  |---|---|---|
+  | id | number | 생성된 게시글 ID |
+  | category | object | 저장된 카테고리 정보 (요청 구조 그대로 반환) |
+  | title | string | 게시글 제목 |
+  | content | string | 게시글 내용 |
+  | userId | number | 작성자 ID |
+  | likeCount | number | 좋아요 수 |
+  | viewCount | number | 조회수 |
+  | commentCount | number | 댓글 수 |
+  | createdAt | string | 작성 일시 (`yyyy-MM-dd'T'HH:mm:ss`, KST) |
+  | updatedAt | string | 수정 일시 (`yyyy-MM-dd'T'HH:mm:ss`, KST) |
+  | thumbnail | string \| null | 대표 이미지 URL (이미지 없으면 null) |

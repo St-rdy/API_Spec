@@ -1,0 +1,42 @@
+info:
+  name: 게시글 좋아요 토글
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/post/:postId/like"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: postId
+      value: "1"
+      type: path
+  auth: inherit
+
+examples:
+  - name: 200 - 토글 성공
+    request:
+      url: "{{base_url}}/api/v1/post/1/like"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "게시글 좋아요 토글 성공",
+            "data": null
+          }
+
+docs: |-
+  ## 게시글 좋아요 토글
+
+  게시글에 좋아요를 하거나 취소합니다.

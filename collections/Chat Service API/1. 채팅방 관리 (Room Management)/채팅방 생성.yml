@@ -1,0 +1,195 @@
+info:
+  name: 채팅방 생성
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/chat/rooms"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "studyGroupId": 1,
+        "historyVisible": true
+      }
+  auth: inherit
+
+examples:
+  - name: 200 - 생성 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"studyGroupId": 1, "historyVisible": true}'
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "채팅방 생성 성공",
+            "data": {
+              "id": 1,
+              "studyGroupId": 1,
+              "name": "알고리즘 스터디",
+              "historyVisible": true,
+              "createdAt": "2026-05-07T12:00:00"
+            }
+          }
+  - name: 400 - 필수 필드 누락
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{}'
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: json
+        data: |-
+          {
+            "code": 400,
+            "status": "MISSING_FIELDS",
+            "message": "필수 필드 누락",
+            "data": null
+          }
+  - name: 401 - 인증 필요
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"studyGroupId": 1, "historyVisible": true}'
+    response:
+      status: 401
+      statusText: Unauthorized
+      body:
+        type: json
+        data: |-
+          {
+            "code": 401,
+            "status": "UNAUTHORIZED",
+            "message": "인증이 필요합니다.",
+            "data": null
+          }
+  - name: 403 - 스터디 그룹 비멤버
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"studyGroupId": 99, "historyVisible": true}'
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "NOT_STUDY_GROUP_MEMBER",
+            "message": "해당 스터디 그룹의 멤버가 아닙니다.",
+            "data": null
+          }
+  - name: 404 - 스터디 그룹 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms"
+      method: POST
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"studyGroupId": 9999, "historyVisible": true}'
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "STUDY_GROUP_NOT_FOUND",
+            "message": "스터디 그룹을 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 채팅방 생성
+
+  스터디 그룹과 연동된 채팅방을 생성합니다.
+  채팅방 이름은 연동된 스터디 그룹의 이름을 자동으로 사용하며 별도로 입력받지 않습니다.
+  생성자가 방장(OWNER)이 되며, 이전 대화 공개 여부를 설정합니다.
+
+  > **Board Service 연동**: 스터디 그룹 생성 시 Board Service가 자동으로 이 API를 호출합니다.
+  > 직접 호출도 가능하나, 스터디 그룹 생성과 별개로 채팅방을 중복 생성하지 않도록 주의하세요.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### 요청 바디
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | studyGroupId | number | ✅ | 연동할 스터디 그룹 ID |
+  | historyVisible | boolean | ✅ | 신규 멤버에게 이전 대화 공개 여부 (true: 공개, false: 비공개) |
+
+  > 채팅방 이름(`name`)은 `studyGroupId`를 통해 Board Service에서 자동으로 조회하여 설정됩니다.
+  > 스터디 그룹 이름이 변경되면 채팅방 이름도 자동으로 동기화됩니다.
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방 생성 성공",
+    "data": {
+      "id": 1,
+      "studyGroupId": 1,
+      "name": "알고리즘 스터디",
+      "historyVisible": true,
+      "createdAt": "2026-05-07T12:00:00"
+    }
+  }
+  ```
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 400 | MISSING_FIELDS | 필수 필드 누락 | studyGroupId 또는 historyVisible 누락 |
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 403 | NOT_STUDY_GROUP_MEMBER | 해당 스터디 그룹의 멤버가 아닙니다. | 스터디 그룹 비멤버의 채팅방 생성 시도 |
+  | 404 | STUDY_GROUP_NOT_FOUND | 스터디 그룹을 찾을 수 없습니다. | 존재하지 않는 studyGroupId |

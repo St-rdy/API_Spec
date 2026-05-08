@@ -1,0 +1,19 @@
+info:
+  name: 2. 실시간 메시징 (Real-time Messaging)
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 실시간 메시징 API
+
+    WebSocket(STOMP) 기반의 실시간 메시지 송수신과 HTTP 기반의 과거 대화 조회, 메시지 수정/삭제 기능을 제공합니다.
+
+    ### 인증 필요 여부
+    - **WebSocket 연결**: ✅ 연결 시 토큰 전달 필수
+    - **과거 대화 조회 API**: ✅ 인증 필수 (historyVisible 정책 적용)
+    - **메시지 수정/삭제 API**: ✅ 인증 필수 (본인 메시지만 가능)
+  type: text/markdown

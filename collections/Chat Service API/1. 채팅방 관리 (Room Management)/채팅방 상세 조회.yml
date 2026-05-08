@@ -1,0 +1,152 @@
+info:
+  name: 채팅방 상세 조회
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{base_url}}/api/v1/chat/rooms/:roomId"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  params:
+    - name: roomId
+      value: "1"
+      type: path
+      description: 조회할 채팅방 ID
+  auth: inherit
+
+examples:
+  - name: 200 - 조회 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "채팅방 상세 조회 성공",
+            "data": {
+              "id": 1,
+              "studyGroupId": 1,
+              "name": "스터디 채팅방",
+              "historyVisible": true,
+              "createdAt": "2026-05-01T09:00:00",
+              "members": [
+                {
+                  "userId": 1,
+                  "nickname": "방장닉네임",
+                  "profileUrl": "https://s3.amazonaws.com/stardy/profile1.jpg",
+                  "role": "OWNER",
+                  "joinedAt": "2026-05-01T09:00:00"
+                },
+                {
+                  "userId": 2,
+                  "nickname": "멤버닉네임",
+                  "profileUrl": "https://s3.amazonaws.com/stardy/profile2.jpg",
+                  "role": "MEMBER",
+                  "joinedAt": "2026-05-02T10:00:00"
+                }
+              ]
+            }
+          }
+  - name: 403 - 채팅방 비멤버
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "NOT_ROOM_MEMBER",
+            "message": "채팅방 멤버가 아닙니다.",
+            "data": null
+          }
+  - name: 404 - 채팅방 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/999"
+      method: GET
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "ROOM_NOT_FOUND",
+            "message": "채팅방을 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 채팅방 상세 조회
+
+  채팅방의 상세 정보와 참여 멤버 목록을 조회합니다.
+  채팅방 멤버만 조회할 수 있으며, 각 멤버의 역할(OWNER/MEMBER)과 가입일을 포함합니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | roomId | number | ✅ | 조회할 채팅방 ID |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방 상세 조회 성공",
+    "data": {
+      "id": 1,
+      "studyGroupId": 1,
+      "name": "스터디 채팅방",
+      "historyVisible": true,
+      "createdAt": "...",
+      "members": [
+        {
+          "userId": 1,
+          "nickname": "방장닉네임",
+          "profileUrl": "...",
+          "role": "OWNER",
+          "joinedAt": "..."
+        }
+      ]
+    }
+  }
+  ```
+
+  ### 멤버 역할 (role)
+  | 값 | 설명 |
+  |---|---|
+  | OWNER | 방장 (채팅방 설정 수정 권한 보유) |
+  | MEMBER | 일반 멤버 |
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 403 | NOT_ROOM_MEMBER | 채팅방 멤버가 아닙니다. | 비멤버 접근 시도 |
+  | 404 | ROOM_NOT_FOUND | 채팅방을 찾을 수 없습니다. | 존재하지 않는 roomId |

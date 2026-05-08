@@ -1,0 +1,18 @@
+info:
+  name: 1. 게시글 (Post)
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 게시글 관련 API
+
+    게시글의 생성, 조회, 수정, 좋아요, 스크랩 기능을 제공합니다.
+
+    ### 인증 필요 여부
+    - **조회 API**: ✅ 인증 권장 (좋아요/스크랩 여부 확인 등)
+    - **생성/수정/토글 API**: ✅ 인증 필수
+  type: text/markdown

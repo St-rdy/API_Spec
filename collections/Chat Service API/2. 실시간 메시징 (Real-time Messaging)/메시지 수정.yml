@@ -1,0 +1,225 @@
+info:
+  name: 메시지 수정
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{base_url}}/api/v1/chat/messages/:messageId"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: messageId
+      value: "1"
+      type: path
+      description: 수정할 메시지 ID
+  body:
+    type: json
+    data: |-
+      {
+        "content": "수정된 메시지 내용"
+      }
+  auth: inherit
+
+examples:
+  - name: 200 - 수정 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": "수정된 메시지 내용"}'
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "메시지 수정 성공",
+            "data": {
+              "id": 101,
+              "content": "수정된 메시지 내용",
+              "status": "EDITED",
+              "updatedAt": "2026-05-07T14:35:00Z"
+            }
+          }
+  - name: 400 - 내용 누락
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": ""}'
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: json
+        data: |-
+          {
+            "code": 400,
+            "status": "CONTENT_REQUIRED",
+            "message": "메시지 내용을 입력해주세요.",
+            "data": null
+          }
+  - name: 400 - FILE 타입 메시지 수정 시도
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/102"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": "수정 시도"}'
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: json
+        data: |-
+          {
+            "code": 400,
+            "status": "MESSAGE_NOT_EDITABLE",
+            "message": "수정할 수 없는 메시지입니다.",
+            "data": null
+          }
+  - name: 403 - 채팅방 비멤버
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": "수정 시도"}'
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "NOT_ROOM_MEMBER",
+            "message": "채팅방 멤버가 아닙니다.",
+            "data": null
+          }
+  - name: 403 - 타인 메시지
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/101"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": "수정 시도"}'
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "MESSAGE_ACCESS_DENIED",
+            "message": "본인의 메시지만 수정/삭제할 수 있습니다.",
+            "data": null
+          }
+  - name: 404 - 메시지 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/messages/999"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"content": "수정 시도"}'
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "MESSAGE_NOT_FOUND",
+            "message": "메시지를 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 메시지 수정
+
+  본인이 보낸 텍스트 메시지를 수정합니다.
+  수정 완료 후 서버는 해당 채팅방을 구독 중인 모든 클라이언트에게 수정 이벤트를 브로드캐스트합니다.
+  수정된 메시지는 모든 사용자 화면에 **(수정됨)** 태그로 표시됩니다.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | messageId | number | ✅ | 수정할 메시지 ID |
+
+  ### 요청 바디
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | content | string | ✅ | 수정할 메시지 내용 |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "메시지 수정 성공",
+    "data": {
+      "id": 101,
+      "content": "수정된 메시지 내용",
+      "status": "EDITED",
+      "updatedAt": "2026-05-07T14:35:00Z"
+    }
+  }
+  ```
+
+  > 수정 후 서버는 `/topic/rooms/{roomId}/edit` 토픽으로 수정 이벤트를 브로드캐스트합니다.
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 400 | CONTENT_REQUIRED | 메시지 내용을 입력해주세요. | 빈 내용으로 수정 시도 |
+  | 400 | MESSAGE_NOT_EDITABLE | 수정할 수 없는 메시지입니다. | FILE 타입 메시지 수정 시도 |
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 403 | NOT_ROOM_MEMBER | 채팅방 멤버가 아닙니다. | 해당 채팅방 비멤버의 접근 시도 |
+  | 403 | MESSAGE_ACCESS_DENIED | 본인의 메시지만 수정/삭제할 수 있습니다. | 타인 메시지 수정 시도 |
+  | 404 | MESSAGE_NOT_FOUND | 메시지를 찾을 수 없습니다. | 존재하지 않는 messageId |

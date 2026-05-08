@@ -8,6 +8,10 @@ collections:
     path: "./collections/User Service API"
   - name: "Alert API"
     path: "./collections/Alert API"
+  - name: "Chat Service API"
+    path: "collections/Chat Service API"
+  - name: "Board Service API"
+    path: "collections/Board Service API"
 
 specs:
 

@@ -1,0 +1,99 @@
+info:
+  name: 게시글 수정
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{base_url}}/api/v1/post/:postId"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: postId
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "category": {
+          "regions": [{ "value": "Seoul", "label": "서울" }],
+          "subjects": [{ "value": "Mathematics", "label": "수학" }]
+        },
+        "title": "수정된 제목",
+        "content": "수정된 내용",
+        "imageIds": []
+      }
+  auth: inherit
+
+examples:
+  - name: 200 - 수정 성공
+    request:
+      url: "{{base_url}}/api/v1/post/1"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "category": {
+              "regions": [{ "value": "Seoul", "label": "서울" }],
+              "subjects": [{ "value": "Mathematics", "label": "수학" }]
+            },
+            "title": "수정된 제목",
+            "content": "수정된 내용",
+            "imageIds": []
+          }
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "게시글 수정 성공",
+            "data": {
+              "id": 1,
+              "category": {
+                "regions": [{ "value": "Seoul", "label": "서울" }],
+                "subjects": [{ "value": "Mathematics", "label": "수학" }]
+              },
+              "title": "수정된 제목",
+              "content": "수정된 내용",
+              "userId": 42,
+              "likeCount": 3,
+              "viewCount": 20,
+              "commentCount": 1,
+              "createdAt": "2026-05-07T10:00:00",
+              "updatedAt": "2026-05-07T12:00:00",
+              "thumbnail": null
+            }
+          }
+
+docs: |-
+  ## 게시글 수정
+
+  작성한 게시글을 수정합니다. 본인만 수정 가능합니다.
+
+  ### 요청 바디
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | category | object | ✅ | 카테고리 정보 (게시글 생성과 동일 구조) |
+  | category.regions | array | ✅ | 지역 목록 (`value` / `label`) |
+  | category.subjects | array | ✅ | 과목 목록 (`value` / `label`) |
+  | title | string | ✅ | 게시글 제목 |
+  | content | string | ✅ | 게시글 내용 |
+  | imageIds | number[] | ✅ | 이미지 ID 목록 (없으면 빈 배열) |
+
+  ### 성공 응답 (200 OK)
+
+  수정된 게시글의 전체 정보를 반환합니다. 응답 필드는 게시글 생성과 동일합니다.

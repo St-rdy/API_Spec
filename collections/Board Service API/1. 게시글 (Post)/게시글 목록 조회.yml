@@ -1,0 +1,118 @@
+info:
+  name: 게시글 목록 조회
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{base_url}}/api/v1/post"
+  params:
+    - name: category
+      value: ""
+      type: query
+    - name: keyword
+      value: ""
+      type: query
+    - name: page
+      value: "0"
+      type: query
+    - name: size
+      value: "10"
+      type: query
+  auth: inherit
+
+examples:
+  - name: 200 - 조회 성공
+    request:
+      url: "{{base_url}}/api/v1/post?page=0&size=10"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "게시글 목록 조회 성공",
+            "data": {
+              "content": [
+                {
+                  "id": 1,
+                  "category": {
+                    "regions": [{ "value": "Seoul", "label": "서울" }],
+                    "subjects": [{ "value": "Mathematics", "label": "수학" }]
+                  },
+                  "title": "게시글 제목",
+                  "content": "게시글 내용",
+                  "userId": 1,
+                  "likeCount": 5,
+                  "viewCount": 50,
+                  "commentCount": 3,
+                  "createdAt": "2026-05-05T12:00:00",
+                  "updatedAt": "2026-05-05T12:00:00",
+                  "thumbnail": "https://s3.amazonaws.com/stardy/image1.jpg"
+                }
+              ],
+              "currentPage": 1,
+              "totalPages": 1,
+              "totalElements": 1,
+              "hasNext": false
+            }
+          }
+
+docs: |-
+  ## 게시글 목록 조회
+
+  카테고리 및 키워드로 게시글 목록을 필터링하여 조회합니다.
+
+  ### Query Parameters
+  | 파라미터 | 타입 | 설명 |
+  |---|---|---|
+  | category | string | 카테고리 필터 |
+  | keyword | string | 제목/내용 검색어 |
+  | page | number | 페이지 번호 (0부터) |
+  | size | number | 페이지 크기 |
+
+  ### 성공 응답 (200 OK)
+
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "게시글 목록 조회 성공",
+    "data": {
+      "content": [ /* PostResponse 목록 */ ],
+      "currentPage": 1,
+      "totalPages": 5,
+      "totalElements": 42,
+      "hasNext": true
+    }
+  }
+  ```
+
+  **content 항목 필드 (PostResponse)**
+
+  | 필드 | 타입 | 설명 |
+  |---|---|---|
+  | id | number | 게시글 ID |
+  | category | object | 카테고리 정보 (`regions` / `subjects` 배열, 각 항목은 `value`+`label`) |
+  | title | string | 제목 |
+  | content | string | 내용 |
+  | userId | number | 작성자 ID |
+  | likeCount | number | 좋아요 수 |
+  | viewCount | number | 조회수 |
+  | commentCount | number | 댓글 수 |
+  | createdAt | string | 작성 일시 (KST) |
+  | updatedAt | string | 수정 일시 (KST) |
+  | thumbnail | string \| null | 대표 이미지 URL |
+
+  **페이지 메타 필드 (PageResponse)**
+
+  | 필드 | 타입 | 설명 |
+  |---|---|---|
+  | currentPage | number | 현재 페이지 번호 (1-based) |
+  | totalPages | number | 전체 페이지 수 |
+  | totalElements | number | 전체 데이터 수 |
+  | hasNext | boolean | 다음 페이지 존재 여부 |

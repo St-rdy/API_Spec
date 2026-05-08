@@ -1,0 +1,18 @@
+info:
+  name: 3. 멤버 및 접근 권한 (Member & Access)
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit
+
+docs:
+  content: |-
+    ## 멤버 및 접근 권한 API
+
+    채팅방 입장 및 퇴장 처리 기능을 제공합니다.
+    입장/퇴장 시 시스템 메시지가 자동으로 발행되며, `historyVisible` 정책에 따라 신규 멤버의 과거 대화 접근 범위가 결정됩니다.
+
+    ### 인증 필요 여부
+    - **입장/퇴장 API**: ✅ 인증 필수
+  type: text/markdown

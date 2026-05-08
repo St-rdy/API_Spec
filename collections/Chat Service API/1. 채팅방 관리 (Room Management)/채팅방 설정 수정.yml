@@ -1,0 +1,146 @@
+info:
+  name: 채팅방 설정 수정
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{base_url}}/api/v1/chat/rooms/:roomId/settings"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: roomId
+      value: "1"
+      type: path
+      description: 수정할 채팅방 ID
+  body:
+    type: json
+    data: |-
+      {
+        "historyVisible": false
+      }
+  auth: inherit
+
+examples:
+  - name: 200 - 수정 성공
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1/settings"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"historyVisible": false}'
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "code": 200,
+            "status": "SUCCESS",
+            "message": "채팅방 설정 수정 성공",
+            "data": {
+              "id": 1,
+              "historyVisible": false
+            }
+          }
+  - name: 403 - 방장 아님
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/1/settings"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"historyVisible": true}'
+    response:
+      status: 403
+      statusText: Forbidden
+      body:
+        type: json
+        data: |-
+          {
+            "code": 403,
+            "status": "NOT_ROOM_OWNER",
+            "message": "채팅방 방장만 수정할 수 있습니다.",
+            "data": null
+          }
+  - name: 404 - 채팅방 없음
+    request:
+      url: "{{base_url}}/api/v1/chat/rooms/999/settings"
+      method: PATCH
+      headers:
+        - name: Authorization
+          value: Bearer eyJhbGciOiJIUzI1NiJ9.EXAMPLE
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"historyVisible": false}'
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: json
+        data: |-
+          {
+            "code": 404,
+            "status": "ROOM_NOT_FOUND",
+            "message": "채팅방을 찾을 수 없습니다.",
+            "data": null
+          }
+
+docs: |-
+  ## 채팅방 설정 수정
+
+  채팅방의 이전 대화 공개 여부(`historyVisible`)를 수정합니다.
+  방장(OWNER)만 수정할 수 있습니다.
+
+  > 채팅방 이름은 스터디 그룹 이름과 자동으로 동기화되므로 이 API에서 변경할 수 없습니다.
+  > 이름 변경이 필요한 경우 Board Service의 스터디 그룹 수정 API를 사용하세요.
+
+  ### 요청 헤더
+  | 헤더 | 필수 | 설명 |
+  |---|---|---|
+  | Authorization | ✅ | `Bearer {accessToken}` (방장만 허용) |
+
+  ### Path Parameters
+  | 파라미터 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | roomId | number | ✅ | 수정할 채팅방 ID |
+
+  ### 요청 바디
+  | 필드 | 타입 | 필수 | 설명 |
+  |---|---|---|---|
+  | historyVisible | boolean | ✅ | 변경할 이전 대화 공개 여부 |
+
+  ### 성공 응답 (200 OK)
+  ```json
+  {
+    "code": 200,
+    "status": "SUCCESS",
+    "message": "채팅방 설정 수정 성공",
+    "data": {
+      "id": 1,
+      "historyVisible": false
+    }
+  }
+  ```
+
+  ### 실패 응답
+  | Status | code | 메시지 | 발생 원인 |
+  |---|---|---|---|
+  | 401 | UNAUTHORIZED | 인증이 필요합니다. | 토큰 없음 |
+  | 403 | NOT_ROOM_OWNER | 채팅방 방장만 수정할 수 있습니다. | 방장이 아닌 사용자의 수정 시도 |
+  | 404 | ROOM_NOT_FOUND | 채팅방을 찾을 수 없습니다. | 존재하지 않는 roomId |
