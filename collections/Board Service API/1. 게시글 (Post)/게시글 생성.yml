@@ -8,7 +8,7 @@ http:
   url: "{{base_url}}/api/v1/post"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
     - name: Content-Type
       value: application/json
   body:
@@ -16,14 +16,22 @@ http:
     data: |-
       {
         "category": {
-          "regions": [{ "value": "Seoul", "label": "서울" }],
-          "subjects": [{ "value": "Mathematics", "label": "수학" }]
+          "regions": "Daejeon",
+          "subjects": "Mathematics"
         },
         "title": "게시글 제목",
         "content": "게시글 내용",
         "imageIds": []
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
 
 examples:
   - name: 200 - 작성 성공
@@ -40,8 +48,8 @@ examples:
         data: |-
           {
             "category": {
-              "regions": [{ "value": "Seoul", "label": "서울" }],
-              "subjects": [{ "value": "Mathematics", "label": "수학" }]
+              "regions": "Seoul",
+              "subjects": "Mathematics"
             },
             "title": "제목",
             "content": "내용",
@@ -60,8 +68,8 @@ examples:
             "data": {
               "id": 10,
               "category": {
-                "regions": [{ "value": "Seoul", "label": "서울" }],
-                "subjects": [{ "value": "Mathematics", "label": "수학" }]
+                "regions": "Seoul",
+                "subjects": "Mathematics"
               },
               "title": "제목",
               "content": "내용",
@@ -121,16 +129,14 @@ docs: |-
   ### 요청 바디
   | 필드 | 타입 | 필수 | 설명 |
   |---|---|---|---|
-  | category | object | ✅ | 카테고리 정보 (아래 구조 참고) |
-  | category.regions | array | ✅ | 지역 목록 |
-  | category.regions[].value | string | ✅ | 지역 식별값 (백엔드 전달용, 예: `"Seoul"`) |
-  | category.regions[].label | string | ✅ | 지역 표시명 (프론트 표시용, 예: `"서울"`) |
-  | category.subjects | array | ✅ | 과목 목록 |
-  | category.subjects[].value | string | ✅ | 과목 식별값 (백엔드 전달용, 예: `"Mathematics"`) |
-  | category.subjects[].label | string | ✅ | 과목 표시명 (프론트 표시용, 예: `"수학"`) |
+  | category | object | ✅ | 카테고리 정보 |
+  | category.regions | string | ✅ | 지역 값 (예: `"Seoul"`, `"Busan"`) |
+  | category.subjects | string | ✅ | 과목 값 (예: `"Mathematics"`, `"Korean"`) |
   | title | string | ✅ | 게시글 제목 |
   | content | string | ✅ | 게시글 내용 |
   | imageIds | number[] | ✅ | 이미지 업로드 API에서 발급받은 ID 목록 (없으면 빈 배열) |
+
+  > `regions`, `subjects`의 유효한 값 목록은 `domain.json` 참고
 
   ### 성공 응답 (200 OK)
 
@@ -142,8 +148,8 @@ docs: |-
     "data": {
       "id": 10,
       "category": {
-        "regions": [{ "value": "Seoul", "label": "서울" }],
-        "subjects": [{ "value": "Mathematics", "label": "수학" }]
+        "regions": "Seoul",
+        "subjects": "Mathematics"
       },
       "title": "제목",
       "content": "내용",
@@ -161,7 +167,8 @@ docs: |-
   | 필드 | 타입 | 설명 |
   |---|---|---|
   | id | number | 생성된 게시글 ID |
-  | category | object | 저장된 카테고리 정보 (요청 구조 그대로 반환) |
+  | category.regions | string | 저장된 지역 값 |
+  | category.subjects | string | 저장된 과목 값 |
   | title | string | 게시글 제목 |
   | content | string | 게시글 내용 |
   | userId | number | 작성자 ID |
